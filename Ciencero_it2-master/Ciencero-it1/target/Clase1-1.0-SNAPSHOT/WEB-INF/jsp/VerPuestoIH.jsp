@@ -69,16 +69,6 @@ html,body,h1,h2,h3,h4,h5 {font-family: "Open Sans", sans-serif}
       <!-- Accordion -->
       <div class="w3-card-2 w3-round">
         <div class="w3-white">
-          <form method="GET" action="/Clase1/agregarPuestoIH">
-          <button class="w3-button w3-block w3-theme-l1 w3-left-align"><i class="fa fa-users fa-fw w3-margin-right"></i>Agregar Puesto (Sólo admin)</button>
-          </form>
-          <form method="GET" action="/Clase1/verPuestoIH">
-          <button class="w3-button w3-block w3-theme-l1 w3-left-align"><i class="fa fa-circle-o-notch fa-fw w3-margin-right"></i>Buscar Puesto</button>
-          </form>
-          <div id="Demo1" class="w3-hide w3-container">
-            <p>Para buscar el puesto</p>
-          </div>
-          <button class="w3-button w3-block w3-theme-l1 w3-left-align"><i class="fa fa-calendar-check-o fa-fw w3-margin-right"></i>Eliminar Usuario (Sólo admin)</button>
           <div id="Demo2" class="w3-hide w3-container">
             <p>Texto3</p>
           </div>          
@@ -131,17 +121,8 @@ html,body,h1,h2,h3,h4,h5 {font-family: "Open Sans", sans-serif}
         <div class="w3-col m12">
           <div class="w3-card-2 w3-round w3-white">
             <div class="w3-container w3-padding">
-              <form method="GET" action="/Clase1/comentar">
-              <h4>${usuarioActual}</h4>
-              <input id="nombre02" name="comentario" type="text" placeholder="Comenta algo" class="w3-border w3-padding-large">              
-              <p>
-              <button class="w3-button w3-theme-l1 w3-left-align"><i class="fa fa-users fa-fw w3-margin-right"></i>Comentar</button>
-              </form>
-              <form method="GET" action="/Clase1/calificar">
-              <input id="nombre02" name="nuevaCalificacion" type="text" placeholder="Califica este puesto (0/10)" class="w3-border w3-padding-large">
-              <p>              
-              <button class="w3-button w3-theme-l1 w3-left-align"><i class="fa fa-users fa-fw w3-margin-right"></i>Calificar</button>
-              </form>
+                ${nua}
+              ${campos}
             </div>
           </div>
         </div>
@@ -152,7 +133,10 @@ html,body,h1,h2,h3,h4,h5 {font-family: "Open Sans", sans-serif}
                 <h4> ${c.getComentario()} </h4>
                 <h8>${c.getUsuario().getNombre()}</h8
                 <p>
-                ${elimC}
+                <form method="POST" action="/Clase1/eliminarComentario">                                
+                    <span class="w3-right w3-opacity"><button class="w3-button w3-theme-l1 w3-left-align"></i>Eliminar Comentario</button></span>
+                    <input type="text" name="textoComentario" style="visibility: hidden" readonly value="${c.getComentario_id()}"/>                                           
+                </form>
                     
         </c:forEach>
       </div>

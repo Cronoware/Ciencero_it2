@@ -2,7 +2,6 @@ package Controlador;
 
 import Mapeo.*;
 import Modelo.*;
-import java.sql.Date;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,6 +12,14 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Properties;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 
 /**
  * @author Jaime & Javier
@@ -52,27 +59,27 @@ public class Controlador {
     
     @RequestMapping(value="/eliminarPuesto", method=RequestMethod.POST)
     public ModelAndView eliminarPuesto(ModelMap model, HttpServletRequest request){
-        String pid = request.getParameter("nombrePuesto");
-        Puesto p = puesto_db.getPuestos(pid).get(0);
+        Puesto p = (Puesto)request.getSession().getAttribute("puestoActual");
         puesto_db.eliminar(p);
         return paginaInicialIH(model,request);
     }
     
     @RequestMapping(value="/eliminarComentario", method=RequestMethod.POST)
     public ModelAndView eliminarComentario(ModelMap model, HttpServletRequest request){
-        String cid = request.getParameter("comentarioId");
-        int id = Integer.parseInt(cid);
+        String cid = request.getParameter("textoComentario");
         System.out.println(" "+cid);
+        int id = Integer.parseInt(cid);
         Comentario c = comentario_db.getComentario(id);
         comentario_db.eliminar(c);
         return paginaInicialIH(model,request);
     }
     
-    @RequestMapping(value="/irPuesto", method=RequestMethod.POST)
+    @RequestMapping(value="/irPuesto", method=RequestMethod.GET)
     public ModelAndView irPuesto(ModelMap model, HttpServletRequest request){
         Usuario usuarioActual = (Usuario)request.getSession().getAttribute("usuarioActual");
-        int id_puesto = Integer.parseInt(request.getParameter("irId"));
-        Puesto puestoActual = puesto_db.getPuesto(id_puesto);
+        String nom_puesto = request.getParameter("irId");
+        System.out.println(" "+nom_puesto);
+        Puesto puestoActual = puesto_db.getPuestos(nom_puesto).get(0);
         String comidas, nombrePuesto, ubicacion, descripcion, calificacion;
         nombrePuesto = puestoActual.getNombre();
         ubicacion = "(" + puestoActual.getPosX() + "," + puestoActual.getPosY() + ")";           
@@ -94,7 +101,9 @@ public class Controlador {
         request.getSession().setAttribute("puestoActual", puestoActual);
         model.addAttribute("elimP", elimP(usuarioActual));
         model.addAttribute("elimC", elimC(usuarioActual));
-
+        model.addAttribute("campos", campos(usuarioActual));
+        if(usuarioActual!=null)
+        model.addAttribute("nua", usuarioActual.getNombre());
         return new ModelAndView("VerPuestoIH",model);
     }
     
@@ -129,6 +138,9 @@ public class Controlador {
         request.getSession().setAttribute("usuarioActual", usuarioActual);
                 model.addAttribute("elimP", elimP(usuarioActual));
                 model.addAttribute("elimC", elimC(usuarioActual));
+                model.addAttribute("campos", campos(usuarioActual));
+                if(usuarioActual!=null)
+        model.addAttribute("nua", usuarioActual.getNombre());
         return verPuestoIH(model,request);   
     }
     
@@ -182,6 +194,51 @@ public class Controlador {
         usuario_db.guardar(nuevoUsuario);
         model.addAttribute("sesion", obtenerSesion(nuevoUsuario));
         request.getSession().setAttribute("usuarioActual", nuevoUsuario);
+        //mail
+        Properties props = System.getProperties();
+        String from = "tu_correo@correo.com";
+        String pass = "tu contraseña";
+        String host = "smtp.gmail.com";
+        String[] to = {correo};
+        String subject = "Registrado en El Ciencero.";
+        String body = nombre+" ha sido registrado exitosamente en El Ciencero";
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.user", from);
+        props.put("mail.smtp.password", pass);
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", "true");
+        
+        Session session = Session.getDefaultInstance(props);
+        MimeMessage message = new MimeMessage(session);
+        
+        try {
+            message.setFrom(new InternetAddress(from));
+            InternetAddress[] toAddress = new InternetAddress[to.length];
+
+            // To get the array of addresses
+            for( int i = 0; i < to.length; i++ ) {
+                toAddress[i] = new InternetAddress(to[i]);
+            }
+
+            for( int i = 0; i < toAddress.length; i++) {
+                message.addRecipient(Message.RecipientType.TO, toAddress[i]);
+            }
+
+            message.setSubject(subject);
+            message.setText(body);
+            Transport transport = session.getTransport("smtp");
+            transport.connect(host, from, pass);
+            transport.sendMessage(message, message.getAllRecipients());
+            transport.close();
+        }
+        catch (AddressException ae) {
+            ae.printStackTrace();
+        }
+        catch(Exception me){
+            me.printStackTrace();
+        }
+        
         return paginaInicialIH(model,request);
     }
     
@@ -282,6 +339,9 @@ public class Controlador {
         request.getSession().setAttribute("puestoActual", puestoActual);
                 model.addAttribute("elimP", elimP(usuarioActual));
                 model.addAttribute("elimC", elimC(usuarioActual));
+                model.addAttribute("campos", campos(usuarioActual));
+                if(usuarioActual!=null)
+        model.addAttribute("nua", usuarioActual.getNombre());
         return new ModelAndView("VerPuestoIH",model);
     }    
     
@@ -387,6 +447,23 @@ public class Controlador {
         return (Usuario)request.getAttribute("usuarioActual");        
     }
     
+    public String campos(Usuario u){
+        String s = "";
+        if(u!=null){
+            s = "<form method=\"GET\" action=\"/Clase1/comentar\">\n" +
+"              <input id=\"nombre02\" name=\"comentario\" type=\"text\" placeholder=\"Comenta algo\" class=\"w3-border w3-padding-large\">              \n" +
+"              <p>\n" +
+"              <button class=\"w3-button w3-theme-l1 w3-left-align\"><i class=\"fa fa-users fa-fw w3-margin-right\"></i>Comentar</button>\n" +
+"              </form>\n" +
+"              <form method=\"GET\" action=\"/Clase1/calificar\">\n" +
+"              <input id=\"nombre02\" name=\"nuevaCalificacion\" type=\"text\" placeholder=\"Califica este puesto (0/10)\" class=\"w3-border w3-padding-large\">\n" +
+"              <p>              \n" +
+"              <button class=\"w3-button w3-theme-l1 w3-left-align\"><i class=\"fa fa-users fa-fw w3-margin-right\"></i>Calificar</button>\n" +
+"              </form>";
+        }
+        return s;
+    }
+    
     public String elimC(Usuario u){
         String s = "";
         if(u!=null && u.getUsuario_id()==1){
@@ -447,68 +524,5 @@ public class Controlador {
         return sesion;
     } 
     
-    /*@RequestMapping(value="/")
-    public ModelAndView inicio(){
-        ModelMap model = new ModelMap();
-        Usuario nuevoUsuario = new Usuario();
-        nuevoUsuario.setNombre("Mark");
-        String sesion = obtenerSesion(nuevoUsuario);
-        ArrayList<Puesto> puestos = new ArrayList<Puesto>();
-        Puesto p1 = new Puesto();
-        Puesto p2 = new Puesto();
-        p1.setNombre("Amm");
-        p2.setNombre("Meh");
-        puestos.add(p1);
-        puestos.add(p2);
-        model.addAttribute("puestosPrueba", puestos);
-        model.addAttribute("sesion", sesion);
-        model.addAttribute("usuarioActual", nuevoUsuario);
-        return new ModelAndView("Prueba", model);
-    }
-    
-    @RequestMapping(value="/matarUsuario", method = RequestMethod.GET)
-    public ModelAndView matarUsuario(ModelMap model,HttpServletRequest request){
-        Usuario nuevoUsuario = new Usuario();
-        ArrayList<Puesto> puestos = new ArrayList<Puesto>();
-        Puesto p1 = new Puesto();
-        Puesto p2 = new Puesto();
-        p1.setNombre("Amm");
-        p2.setNombre("Meh");
-        p1.setPuesto_id(2);
-        p2.setPuesto_id(1);
-        puestos.add(p1);
-        puestos.add(p2);
-        nuevoUsuario.setNombre("Mark");
-        System.out.println(nuevoUsuario);
-        request.getSession().setAttribute("usuarioActual", nuevoUsuario);
-        request.getSession().setAttribute("puestosPrueba", puestos);
-        model.addAttribute("sesion", obtenerSesion(nuevoUsuario));
-        model.addAttribute("usuarioActual", nuevoUsuario);
-        return new ModelAndView("Prueba2",model);
-    }
-    
-    /*@RequestMapping(value="/generarUsuario", method = RequestMethod.GET)
-    public ModelAndView generarUsuario(ModelMap model,HttpServletRequest request){        
-        Usuario usuarioActual = (Usuario)request.getSession().getAttribute("usuarioActual");
-        System.out.println(usuarioActual.getNombre());
-        model.addAttribute("sesion", obtenerSesion(usuarioActual));
-        model.addAttribute("usuarioActual", usuarioActual);
-        return new ModelAndView("Prueba3",model);
-    }
-    
-    @RequestMapping(value="/imprimirPuesto", method = RequestMethod.GET)
-    public ModelAndView imprimirPuesto(ModelMap model,HttpServletRequest request){        
-        ArrayList<Puesto> puestos = (ArrayList<Puesto>)request.getSession().getAttribute("puestosPrueba");
-        Usuario usuarioActual = (Usuario)request.getSession().getAttribute("usuarioActual");
-        System.out.println(usuarioActual.getNombre());
-        for (Puesto p : puestos){
-            System.out.println(p.getNombre());
-        }
-        String puestoActualID = request.getParameter("idPuesto");
-        System.out.println("Id:" + puestoActualID);
-        model.addAttribute("sesion", obtenerSesion(usuarioActual));
-        model.addAttribute("usuarioActual", usuarioActual);
-        return new ModelAndView("Prueba2",model);
-    }*/
-    
+        
 }

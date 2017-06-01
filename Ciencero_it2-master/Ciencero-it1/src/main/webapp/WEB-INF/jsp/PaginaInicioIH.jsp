@@ -118,15 +118,16 @@
                                         }
                                     </style>
                                     <div id="map"></div>
-                                    <form method="POST" action="/Clase1/irPuesto">
-                                        <input id="irId" nombre="irId" value="">
+                                    <form method="GET" action="/Clase1/irPuesto">
+                                        <input id="irId" name="irId" type="text" value="%" readonly>
                                         <button>Ver Puesto</button>
                                     </form>
                                         <script>
                                         var puestoId = [];
+                                        var map;
                                               function initMap() {
                                                     var fciencias = {lat: 19.3234472, lng: -99.1818304};
-                                                    var map = new google.maps.Map(document.getElementById('map'), {
+                                                    map = new google.maps.Map(document.getElementById('map'), {
                                                           zoom: 17,
                                                           center: fciencias
                                                     });
@@ -140,6 +141,12 @@
                                         <c:forEach var="s" items="${puestos}" varStatus="status">
                                             <c:out value="${s.posY}"/>,
                                         </c:forEach>];
+                                            
+                                            var puestoN = [
+                                        <c:forEach var="s" items="${puestos}" varStatus="status">
+                                            "<c:out value="${s.getNombre()}"/>",
+                                        </c:forEach>];
+                                            
                                             puestoId = [
                                         <c:forEach var="s" items="${puestos}" varStatus="status">
                                             <c:out value="${s.puesto_id}"/>,
@@ -147,11 +154,13 @@
                                             var i = 0;
                                             var ps = [];
                                             for (i = 0; i < puestoX.length; i++) {
-                                                var aux = {lat: puestoX[i], lng: puestoY[i]};
+                                                var aux = {lat: puestoY[i], lng: puestoX[i]};
                                                 var tmp = new google.maps.Marker({position: aux, map: map});
+                                                tmp.setLabel(puestoN[i]);
+                                                //tmp.setClickable(true);
                                                 ps.push(tmp);
-                                                tmp.addListener('click', function () {
-                                                    document.getElementById("irId").value = puestoId[i];
+                                                tmp.addListener('click', function (evt) {
+                                                    document.getElementById("irId").value = tmp.getLabel();
                                                 });
                                             }
                                         }
