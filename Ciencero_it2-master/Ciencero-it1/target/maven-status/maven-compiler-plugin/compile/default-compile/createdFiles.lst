@@ -1,0 +1,9 @@
+Mapeo\Usuario.class
+Modelo\PuestoDAO.class
+Modelo\CalificacionDAO.class
+Modelo\ComentarioDAO.class
+Modelo\UsuarioDAO.class
+Controlador\Controlador.class
+Mapeo\Comentario.class
+Mapeo\Calificacion.class
+Mapeo\Puesto.class

@@ -1,0 +1,48 @@
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/**
+ * Author:  emilio
+ * Created: 25/05/2017
+ */
+
+
+create table usuario(
+    usuario_id int primary key auto_increment,
+    nombre varchar(128) not null,
+    correo varchar(128) not null,
+    psswd varchar(128) not null,
+    foto varchar(128),
+    unique(correo)
+    );
+ 
+create table puesto(
+    puesto_id int primary key auto_increment,
+    nombre varchar(128) not null,
+    posX double not null,
+    posY double not null,
+    unique (nombre));
+ 
+create table categorias(
+    puesto_id int,
+    tipo varchar(16),
+    primary key (puesto_id, tipo),
+    foreign key (puesto_id) references puesto(puesto_id));
+ 
+create table comentario(
+    comentario_id int primary key auto_increment,
+    usuario_id int,
+    puesto_id int,
+    texto varchar(128) not null,
+    foreign key (usuario_id) references usuario(usuario_id),
+    foreign key (puesto_id) references puesto(puesto_id));
+ 
+create table calificacion(
+    calificacion_id int primary key auto_increment,
+    usuario_id int,
+    puesto_id int,
+    estrellas int not null,
+    foreign key (usuario_id) references usuario(usuario_id),
+    foreign key (puesto_id) references puesto(puesto_id)));
